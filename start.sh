@@ -1,32 +1,49 @@
 #!/bin/bash
 
-# Start the backend
-echo "Starting the backend..."
-cd BackendPython/src
-python main.py &
-BACKEND_PID=$!
+# Script para iniciar o Grid Trading Bot completo (backend e frontend)
 
-# Wait for the backend to start
-echo "Waiting for the backend to start..."
+echo "Iniciando Grid Trading Bot com Reinforcement Learning..."
+
+# Verificar se o diretório de logs existe
+mkdir -p BackendPython/logs
+
+# Verificar se o diretório de modelos existe
+mkdir -p BackendPython/models
+
+# Iniciar o backend em segundo plano
+echo "Iniciando o backend..."
+cd BackendPython
+python src/main.py &
+BACKEND_PID=$!
+cd ..
+
+# Aguardar o backend iniciar
+echo "Aguardando o backend iniciar..."
 sleep 5
 
-# Start the frontend
-echo "Starting the frontend..."
-cd ../../algo-grid-pilot
-npm start &
+# Iniciar o frontend
+echo "Iniciando o frontend..."
+cd algo-grid-pilot
+npm run dev &
 FRONTEND_PID=$!
+cd ..
 
-# Function to handle script termination
+echo "Grid Trading Bot iniciado!"
+echo "Backend PID: $BACKEND_PID"
+echo "Frontend PID: $FRONTEND_PID"
+echo "Acesse o frontend em http://localhost:5173"
+
+# Função para encerrar os processos ao sair
 function cleanup {
-  echo "Stopping the backend and frontend..."
-  kill $BACKEND_PID
-  kill $FRONTEND_PID
-  exit 0
+    echo "Encerrando processos..."
+    kill $BACKEND_PID
+    kill $FRONTEND_PID
+    echo "Processos encerrados."
 }
 
-# Register the cleanup function for SIGINT and SIGTERM
+# Registrar a função de limpeza para ser executada ao sair
 trap cleanup SIGINT SIGTERM
 
-# Wait for user to press Ctrl+C
-echo "Press Ctrl+C to stop both servers"
+# Manter o script em execução
+echo "Pressione Ctrl+C para encerrar..."
 wait
